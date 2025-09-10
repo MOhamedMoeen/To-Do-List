@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">My To-Do List</h1>
+
+<!-- 🔍 Search + Filter + Sort -->
+<form method="GET" action="{{ url_for('index') }}" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <input type="text" name="q" value="{{ request.args.get('q','') }}" class="form-control" placeholder="Search tasks...">
+    </div>
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="all" {% if status_filter=='all' %}selected{% endif %}>All</option>
+            <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pending</option>
+            <option value="done" {% if status_filter=='done' %}selected{% endif %}>Done</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="sort" class="form-select">
+            <option value="time" {% if sort_by=='time' %}selected{% endif %}>Sort by Time</option>
+            <option value="priority" {% if sort_by=='priority' %}selected{% endif %}>Sort by Priority</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-secondary w-100">Apply</button>
+    </div>
+</form>
+
+<!-- ➕ Add Task -->
+<form method="POST" action="{{ url_for('add') }}" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input type="text" name="task" placeholder="Enter a new task" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+        <select name="priority" class="form-select">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Add Task</button>
+    </div>
+</form>
+
+<!-- 📋 Tasks List -->
+<ul class="list-group">
+    {% for task in tasks %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            {% if task[2].lower() == "done" %}
+                <s>{{ task[1] }}</s>
+            {% else %}
+                {{ task[1] }}
+            {% endif %}
+            <span class="badge bg-{{ 'danger' if task[6]=='High' else 'warning' if task[6]=='Medium' else 'success' }}">
+                {{ task[6] }}
+            </span>
+            <br>
+            <small class="text-muted">Added: {{ task[3] }}</small>
+        </div>
+        <div class="btn-group">
+            {% if task[2].lower() == "pending" %}
+            <form method="POST" action="{{ url_for('done', id=task[0]) }}">
+                <button type="submit" class="btn btn-sm btn-success">Done</button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('edit', id=task[0]) }}" class="d-flex ms-1">
+                <input type="text" name="task" value="{{ task[1] }}" class="form-control form-control-sm me-1" required>
+                <button type="submit" class="btn btn-sm btn-warning">Edit</button>
+            </form>
+            <form method="POST" action="{{ url_for('delete', id=task[0]) }}" class="ms-1">
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+        </div>
+    </li>
+    {% else %}
+    <li class="list-group-item text-center text-muted">No tasks found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
